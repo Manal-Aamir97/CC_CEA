@@ -1,0 +1,84 @@
+{% extends "layout_app.html" %}
+{% block title %}Expenses | Khata Expense Tracker{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Expenses</h1>
+    <p class="sub">{{ start.strftime('%B %Y') if start else 'All time' }}{% if category %}, {{ category }}{% endif %}{% if search %}, matching “{{ search }}”{% endif %}</p>
+  </div>
+</div>
+
+<form class="filters" method="get" action="{{ url_for('main.expenses') }}">
+  <label>Month
+    <select name="month">
+      <option value="all" {% if month == 'all' %}selected{% endif %}>All time</option>
+      {% for m in month_options %}
+        {% set v = m.strftime('%Y-%m') %}
+        <option value="{{ v }}" {% if v == month %}selected{% endif %}>{{ m.strftime('%B %Y') }}</option>
+      {% endfor %}
+      {% if start and start not in month_options %}<option value="{{ month }}" selected>{{ start.strftime('%B %Y') }}</option>{% endif %}
+    </select>
+  </label>
+  <label>Category
+    <select name="category">
+      <option value="">All categories</option>
+      {% for c in categories %}<option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="search">Search
+    <input type="search" name="q" value="{{ search }}" placeholder="Title or note">
+  </label>
+  <button class="btn" type="submit">Show</button>
+  <a class="btn btn-quiet" href="{{ url_for('main.export_csv', month=month, category=category, q=search) }}">Download CSV</a>
+</form>
+
+{% if rows %}
+<section class="panel">
+  <div class="result-line">
+    <span>{{ count }} expense{{ 's' if count != 1 }}</span>
+    <span>Total {{ currency }} <strong>{{ total|money }}</strong></span>
+  </div>
+  <table class="ledger">
+    <thead><tr><th>Date</th><th>Expense</th><th>Category</th><th class="amt">Amount ({{ currency }})</th><th><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+    {% for e in rows %}
+      <tr>
+        <td class="date">{{ e.spent_on.strftime('%d %b %Y' if not start else '%d %b') }}</td>
+        <td class="title">{{ e.title }}{% if e.note %}<span class="note">{{ e.note }}</span>{% endif %}</td>
+        <td class="cat"><span class="dot" style="background: {{ category_color(e.category) }}"></span>{{ e.category }}</td>
+        <td class="amt">{{ e.amount_cents|money }}</td>
+        <td class="acts">
+          {% if e.receipt_key %}<a href="{{ url_for('main.view_receipt', expense_id=e.id) }}" target="_blank" rel="noopener">Receipt</a>{% endif %}
+          <a href="{{ url_for('main.edit_expense', expense_id=e.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('main.delete_expense', expense_id=e.id) }}" data-confirm="Delete {{ e.title }}? This can't be undone.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="back" value="{{ request.full_path }}">
+            <button class="link-btn danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    {% if pages == 1 %}
+    <tfoot><tr><td></td><td class="title">Total</td><td></td><td class="amt">{{ total|money }}</td><td></td></tr></tfoot>
+    {% endif %}
+  </table>
+  {% if pages > 1 %}
+  <nav class="pager" aria-label="Pages">
+    {% if page > 1 %}<a class="btn btn-sm" href="{{ url_for('main.expenses', month=month, category=category, q=search, page=page - 1) }}">Newer</a>{% endif %}
+    <span>Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a class="btn btn-sm" href="{{ url_for('main.expenses', month=month, category=category, q=search, page=page + 1) }}">Older</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% else %}
+<section class="panel empty">
+  <h2>No expenses here</h2>
+  <p>{% if search or category %}Nothing matches these filters. Try another month or clear the search.{% else %}You haven't recorded anything for {{ start.strftime('%B %Y') if start else 'any month' }} yet.{% endif %}</p>
+  <div class="actions">
+    <a class="btn btn-khata" href="{{ url_for('main.new_expense') }}">Add expense</a>
+    {% if search or category %}<a class="btn" href="{{ url_for('main.expenses', month=month) }}">Clear filters</a>{% endif %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

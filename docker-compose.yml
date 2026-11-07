@@ -1,0 +1,58 @@
+# Local / CI orchestration of all three tiers.
+#   docker compose up --build     ->  http://localhost:8080
+# In AWS the database tier is Amazon RDS instead of the "db" container
+# (see docker-compose.prod.yml).
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: expensedb
+      MYSQL_USER: expense
+      MYSQL_PASSWORD: ${DB_PASSWORD:-localdevpass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-localrootpass}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-localrootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks: [backend]
+
+  app:
+    build: ./app
+    image: expense-app:local
+    labels:
+      org.opencontainers.image.source: https://github.com/${GITHUB_REPOSITORY:-local/expense-tracker}
+    environment:
+      DB_HOST: db
+      DB_NAME: expensedb
+      DB_USER: expense
+      DB_PASSWORD: ${DB_PASSWORD:-localdevpass}
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret}
+      APP_VERSION: local
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [frontend, backend]
+
+  web:
+    build: ./web
+    image: expense-web:local
+    labels:
+      org.opencontainers.image.source: https://github.com/${GITHUB_REPOSITORY:-local/expense-tracker}
+    ports:
+      - "8080:80"
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [frontend]
+
+networks:
+  frontend: {}
+  backend:
+    internal: true   # db is unreachable from the web container and the internet
+
+volumes:
+  dbdata: {}

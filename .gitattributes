@@ -1,0 +1,3 @@
+# Keep Unix line endings: these files run on Linux (EC2, containers, CI).
+* text=auto eol=lf
+*.png binary

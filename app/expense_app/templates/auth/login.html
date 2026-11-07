@@ -1,0 +1,18 @@
+{% extends "layout_auth.html" %}
+{% block title %}Log in | Khata Expense Tracker{% endblock %}
+{% block card %}
+<h1>Welcome back</h1>
+<p class="sub">Log in to see this month's spending.</p>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>Email
+    <input type="email" name="email" value="{{ email }}" autocomplete="email" required autofocus>
+  </label>
+  <label>Password
+    <input type="password" name="password" autocomplete="current-password" required>
+  </label>
+  <label class="check"><input type="checkbox" name="remember" value="1" checked> Keep me logged in for two weeks</label>
+  <button class="btn btn-khata" type="submit">Log in</button>
+</form>
+<p class="switch">New to Khata? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block header %}
+<header class="app-head">
+  <div class="wrap">
+    <a class="brand" href="{{ url_for('main.dashboard') }}">{% include "_brand.html" %}</a>
+    <nav class="app-nav" aria-label="Main">
+      {% set ep = request.endpoint %}
+      <a href="{{ url_for('main.dashboard') }}" {% if ep == 'main.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
+      <a href="{{ url_for('main.expenses') }}" {% if ep in ['main.expenses', 'main.new_expense', 'main.edit_expense'] %}aria-current="page"{% endif %}>Expenses</a>
+      <a href="{{ url_for('main.budgets') }}" {% if ep == 'main.budgets' %}aria-current="page"{% endif %}>Budgets</a>
+      <a href="{{ url_for('main.settings') }}" {% if ep == 'main.settings' %}aria-current="page"{% endif %}>Settings</a>
+    </nav>
+    <div class="app-user">
+      <a class="btn btn-khata btn-sm" href="{{ url_for('main.new_expense') }}">Add expense</a>
+      <span class="avatar" title="{{ g.user.name }}" aria-hidden="true">{{ g.user.name[:1]|upper }}</span>
+      <span class="name sr-only">{{ g.user.name }}</span>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-quiet btn-sm" type="submit">Log out</button>
+      </form>
+    </div>
+  </div>
+</header>
+{% endblock %}
+{% block main %}
+<div class="wrap page">
+  {% include "_flashes.html" %}
+  {% block content %}{% endblock %}
+</div>
+{% endblock %}
+{% block footer %}
+<footer class="app-foot">
+  <div class="wrap">
+    <span>Served by <code>{{ instance_id }}</code></span>
+    <span>Release <code>{{ app_version }}</code></span>
+    <span>Nginx, Flask and MySQL on AWS</span>
+  </div>
+</footer>
+{% endblock %}

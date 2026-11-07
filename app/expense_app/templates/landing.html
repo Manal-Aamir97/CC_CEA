@@ -1,0 +1,79 @@
+{% extends "layout_public.html" %}
+{% block title %}Khata Expense Tracker: know where your money goes{% endblock %}
+{% block main %}
+<section class="hero">
+  <div class="wrap">
+    <div>
+      {% include "_flashes.html" %}
+      <h1>Know where every rupee went.</h1>
+      <p class="lede">Khata is a simple expense tracker. Write down what you spend, set a budget for the month, and see at a glance what's left.</p>
+      <div class="actions">
+        <a class="btn btn-khata" href="{{ url_for('auth.signup') }}">Create a free account</a>
+        <a class="btn" href="{{ url_for('auth.login') }}">Log in</a>
+      </div>
+      <p class="fine">Free, no card needed. Start with sample data if you just want to look around.</p>
+    </div>
+
+    <div class="khata-page" role="img" aria-label="A handwritten ledger page listing six expenses that total Rs 12,480, with Rs 7,520 left in the budget">
+      <div class="page-head"><span>October</span><span>Rs</span></div>
+      <ol>
+        <li><span class="d">2nd</span><span>Groceries</span><span class="a">3,450</span></li>
+        <li><span class="d">4th</span><span>Rickshaw to uni</span><span class="a">250</span></li>
+        <li><span class="d">9th</span><span>Electricity bill</span><span class="a">6,800</span></li>
+        <li><span class="d">12th</span><span>Course book</span><span class="a">1,200</span></li>
+        <li><span class="d">15th</span><span>Chai and samosa</span><span class="a">180</span></li>
+        <li><span class="d">18th</span><span>Mobile package</span><span class="a">600</span></li>
+        <li class="total"><span class="d"></span><span>Total</span><span class="a">12,480</span></li>
+      </ol>
+      <div class="red-pen">7,520 left this month</div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="features">
+  <div class="wrap">
+    <h2>Everything a khata does, without the arithmetic.</h2>
+    <p class="intro">The old ledger book works because it's simple. Khata keeps it that way and does the adding up for you.</p>
+    <div class="features">
+      <div class="feature">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <h3>Record an expense in seconds</h3>
+        <p>Amount, category, date. Add a note or a photo of the receipt if you want to keep it.</p>
+      </div>
+      <div class="feature">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <h3>See the month at a glance</h3>
+        <p>Your total, daily average and biggest categories, plus how this month compares with the last five.</p>
+      </div>
+      <div class="feature">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <h3>Budgets that warn you early</h3>
+        <p>Set a limit for the month or for each category. Bars turn amber as you get close and red when you go over.</p>
+      </div>
+      <div class="feature">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+        <h3>Your data, yours to take</h3>
+        <p>Download any month, or everything, as a spreadsheet. Delete your account and all of it goes with it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="how">
+  <div class="wrap">
+    <h2>Set up in about a minute.</h2>
+    <ol class="steps">
+      <li><h3>Create your account</h3><p>Name, email and a password. Pick your currency.</p></li>
+      <li><h3>Write down what you spend</h3><p>Add expenses as they happen, or at the end of the day from your receipts.</p></li>
+      <li><h3>Check in once a week</h3><p>The dashboard shows where the money went and how much of your budget is left.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Start this month's khata.</h2>
+    <a class="btn" href="{{ url_for('auth.signup') }}">Create a free account</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "layout_app.html" %}
+{% block title %}Settings | Khata Expense Tracker{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Settings</h1><p class="sub">Signed in as {{ g.user.email }}</p></div></div>
+<div class="settings-grid">
+  <form class="panel stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="profile">
+    <h2>Profile</h2>
+    <div class="row-2">
+      <label>Name <input type="text" name="name" value="{{ g.user.name }}" maxlength="80" required></label>
+      <label>Currency
+        <select name="currency">{% for c in currencies %}<option value="{{ c }}" {% if c == g.user.currency %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+      </label>
+    </div>
+    <div class="form-actions"><button class="btn btn-khata" type="submit">Save profile</button></div>
+  </form>
+
+  <form class="panel stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="password">
+    <h2>Password</h2>
+    <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
+    <div class="row-2">
+      <label>New password <input type="password" name="new_password" minlength="8" autocomplete="new-password" required></label>
+      <label>Confirm new password <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required></label>
+    </div>
+    <div class="form-actions"><button class="btn btn-khata" type="submit">Change password</button></div>
+  </form>
+
+  <section class="panel">
+    <h2 style="margin-bottom: 14px">Your data</h2>
+    <p class="muted" style="margin: 0 0 16px">{{ stats.n }} expense{{ 's' if stats.n != 1 }} recorded, {{ currency }} {{ stats.total|money0 }} in total.</p>
+    <a class="btn" href="{{ url_for('main.export_csv', month='all') }}">Download everything as CSV</a>
+  </section>
+
+  <form class="panel stack danger-zone" method="post" data-confirm="Delete your account and every expense in it? This can't be undone.">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="delete">
+    <h2>Delete account</h2>
+    <p class="muted" style="margin: -6px 0 0">This permanently deletes your account, all expenses, budgets and uploaded receipts.</p>
+    <label>Type your email address to confirm <input type="email" name="confirm_email" autocomplete="off" required></label>
+    <div class="form-actions"><button class="btn btn-danger" type="submit">Delete my account</button></div>
+  </form>
+</div>
+{% endblock %}

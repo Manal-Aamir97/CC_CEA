@@ -1,0 +1,29 @@
+# Production compose file used on each EC2 instance (copied there by
+# infra/user-data.sh to /opt/expense/). Values come from /opt/expense/.env,
+# which deploy.sh builds from AWS SSM Parameter Store - nothing secret is
+# stored in this file, the repository or the images.
+
+x-logging: &cloudwatch
+  driver: awslogs
+  options:
+    awslogs-region: ${AWS_REGION}
+    awslogs-group: /expense-tracker
+    awslogs-create-group: "true"
+    tag: "${INSTANCE_ID}/{{.Name}}"
+
+services:
+  app:
+    image: ghcr.io/${GHCR_OWNER}/expense-app:${IMAGE_TAG:-latest}
+    env_file: .env
+    restart: unless-stopped
+    logging: *cloudwatch
+    # No "ports:" - the app tier is reachable only from the web container.
+
+  web:
+    image: ghcr.io/${GHCR_OWNER}/expense-web:${IMAGE_TAG:-latest}
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: unless-stopped
+    logging: *cloudwatch

@@ -1,0 +1,38 @@
+{% extends "layout_app.html" %}
+{% block title %}Budgets | Khata Expense Tracker{% endblock %}
+{% block content %}
+<div class="form-page" style="max-width: 760px">
+  <div class="page-head">
+    <div>
+      <h1>Monthly budgets</h1>
+      <p class="sub">Set a limit for the whole month, for any category, or both. Leave a box empty for no limit. The dashboard warns you at 80% and when you go over.</p>
+    </div>
+  </div>
+
+  <form class="panel" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <table class="budget-table">
+      <thead><tr><th>Category</th><th>Spent in {{ month.strftime('%B') }}</th><th>Budget per month ({{ currency }})</th></tr></thead>
+      <tbody>
+        {% set tb = budgets.get('__total__') %}
+        <tr class="total">
+          <td>Whole month</td>
+          <td class="spent {{ 'over' if tb and spent_total > tb }}">{{ spent_total|money0 }}</td>
+          <td><label class="sr-only" for="b-total">Monthly total budget</label>
+            <input id="b-total" type="text" inputmode="decimal" name="b___total__" value="{{ (tb / 100)|round|int if tb else '' }}" placeholder="No limit"></td>
+        </tr>
+        {% for c in categories %}
+        {% set b = budgets.get(c) %}{% set s = spent.get(c, 0) %}
+        <tr>
+          <td><span class="cat-name"><span class="dot" style="background: {{ category_color(c) }}"></span>{{ c }}</span></td>
+          <td class="spent {{ 'over' if b and s > b }}">{{ s|money0 }}</td>
+          <td><label class="sr-only" for="b-{{ loop.index }}">{{ c }} budget</label>
+            <input id="b-{{ loop.index }}" type="text" inputmode="decimal" name="b_{{ c }}" value="{{ (b / 100)|round|int if b else '' }}" placeholder="No limit"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="form-actions"><button class="btn btn-khata" type="submit">Save budgets</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+# CI/CD for the Expense Tracker three-tier app
+#
+#   push to main ──► test ──► build + smoke-test + push to GHCR ──► deploy to AWS
+#   pull request ──► test ──► build + smoke-test           (no push, no deploy)
+#
+# Secrets handling:
+#   * GHCR push uses the short-lived GITHUB_TOKEN (no personal token stored).
+#   * AWS access uses OpenID Connect: GitHub gets temporary credentials for an
+#     IAM role scoped to this repo's main branch. No AWS keys are stored in GitHub.
+#
+# Repository variables (Settings → Secrets and variables → Actions → Variables):
+#   AWS_ROLE_ARN   arn:aws:iam::<account-id>:role/github-actions-expense-deploy
+#   AWS_REGION     e.g. us-east-1
+#   ASG_NAME       expense-asg
+#   APP_URL        http://<your-alb-dns-name>
+# Until AWS_ROLE_ARN is set, the deploy job is skipped and the rest still runs.
+
+name: CI/CD - Expense Tracker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: app/requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run pytest
+        run: pytest -v
+
+  build:
+    name: Build, smoke-test and push images
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image names and tag
+        id: meta
+        run: |
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build web and app images
+        run: docker compose build
+
+      - name: Smoke-test the full stack (Nginx + Flask + MySQL)
+        run: |
+          docker compose up -d --wait --wait-timeout 180
+          BASE=http://localhost:8080
+          curl -fsS $BASE/health
+          curl -fsS $BASE/ | grep -q "Expense Tracker"
+          curl -fsS -o /dev/null $BASE/static/css/style.css
+          # Sign up a user (writes to MySQL) and load the dashboard
+          curl -fsS -c jar -b jar $BASE/signup -o signup.html
+          TOKEN=$(grep -o 'name="csrf_token" value="[^"]*"' signup.html | head -1 | sed 's/.*value="//; s/"$//')
+          curl -fsS -c jar -b jar -o /dev/null -X POST $BASE/signup \
+            --data-urlencode "csrf_token=$TOKEN" -d name=CI -d email=ci@example.com \
+            -d password=ci-password-1 -d confirm=ci-password-1 -d currency=Rs -d sample=1
+          curl -fsS -b jar $BASE/dashboard | grep -q "Last six months"
+          curl -fsS -b jar "$BASE/expenses/export.csv?month=all" | head -1 | grep -q "Date,Title,Category"
+          echo "Smoke test passed"
+
+      - name: Show container logs if the smoke test failed
+        if: failure()
+        run: docker compose logs
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push the tested images (commit tag + latest)
+        if: github.event_name != 'pull_request'
+        env:
+          OWNER: ${{ steps.meta.outputs.owner }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          for svc in app web; do
+            for t in "$TAG" latest; do
+              docker tag "expense-$svc:local" "ghcr.io/$OWNER/expense-$svc:$t"
+              docker push "ghcr.io/$OWNER/expense-$svc:$t"
+            done
+          done
+          echo "### Pushed images" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/$OWNER/expense-app:$TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/$OWNER/expense-web:$TAG" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy to AWS (Auto Scaling Group via SSM)
+    needs: build
+    if: github.event_name != 'pull_request' && vars.AWS_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for OIDC
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+      ASG_NAME: ${{ vars.ASG_NAME }}
+      APP_URL: ${{ vars.APP_URL }}
+    steps:
+      - name: Get temporary AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Roll out the new image to every running instance
+        run: |
+          IDS=$(aws autoscaling describe-auto-scaling-groups \
+                  --auto-scaling-group-names "$ASG_NAME" \
+                  --query "AutoScalingGroups[0].Instances[?LifecycleState=='InService'].InstanceId" \
+                  --output text)
+          if [ -z "$IDS" ] || [ "$IDS" = "None" ]; then
+            echo "No InService instances found in $ASG_NAME"; exit 1
+          fi
+          echo "Instances: $IDS"
+
+          CMD_ID=$(aws ssm send-command \
+                    --document-name AWS-RunShellScript \
+                    --instance-ids $IDS \
+                    --comment "Deploy $TAG from GitHub Actions run $GITHUB_RUN_ID" \
+                    --parameters "{\"commands\":[\"/opt/expense/deploy.sh $TAG\"]}" \
+                    --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          for id in $IDS; do
+            STATUS=Pending
+            for i in $(seq 1 60); do
+              STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$id" \
+                         --query Status --output text 2>/dev/null || echo Pending)
+              case "$STATUS" in
+                Success|Failed|Cancelled|TimedOut) break ;;
+              esac
+              sleep 5
+            done
+            echo "---- $id: $STATUS ----"
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$id" \
+              --query StandardOutputContent --output text || true
+            if [ "$STATUS" != "Success" ]; then
+              aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$id" \
+                --query StandardErrorContent --output text || true
+              exit 1
+            fi
+          done
+
+      - name: Verify the new version through the load balancer
+        run: |
+          for i in $(seq 1 20); do
+            BODY=$(curl -fsS "$APP_URL/health" || true)
+            echo "$BODY"
+            if echo "$BODY" | grep -q "$TAG"; then
+              echo "### Deployed $TAG to $APP_URL" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "Load balancer is not serving $TAG yet"; exit 1

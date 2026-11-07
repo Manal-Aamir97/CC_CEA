@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Khata Expense Tracker{% endblock %}</title>
+  <meta name="description" content="Khata is a simple expense tracker: record what you spend, set monthly budgets and see where your money goes.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 34'%3E%3Crect x='1' y='1' width='28' height='32' rx='3' fill='%23a3172a'/%3E%3Crect x='5' y='1' width='2' height='32' fill='%237e0f1f'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ app_version }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block header %}{% endblock %}
+<main id="main">
+{% block main %}{% endblock %}
+</main>
+{% block footer %}{% endblock %}
+<script src="/static/js/app.js?v={{ app_version }}" defer></script>
+</body>
+</html>

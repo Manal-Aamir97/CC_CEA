@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block header %}
+<header class="auth-head"><a class="brand" href="{{ url_for('main.landing') }}">{% include "_brand.html" %}</a></header>
+{% endblock %}
+{% block main %}
+<div class="auth">
+  <div class="auth-card">
+    {% include "_flashes.html" %}
+    {% block card %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

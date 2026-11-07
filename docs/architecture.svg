@@ -1,0 +1,250 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1150" width="1700" height="1150" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f6f50"/></marker>
+    <marker id="a-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7b3fe4"/></marker>
+    <marker id="a-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker>
+    <marker id="a-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2459c9"/></marker>
+    <style>
+      .t  { font-size: 14px; fill: #1d2a24; }
+      .ts { font-size: 12px; fill: #3d4a44; }
+      .tx { font-size: 11px; fill: #5a645f; }
+      .tb { font-size: 15px; font-weight: 700; fill: #1d2a24; }
+      .h  { font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+      .box { fill: #fff; stroke: #9aa4a0; stroke-width: 1.2; rx: 8; }
+      .sg  { fill: none; stroke: #dd344c; stroke-width: 1.6; stroke-dasharray: 7 4; rx: 10; }
+      .flow { stroke: #1f6f50; stroke-width: 2.4; fill: none; marker-end: url(#a-g); }
+      .ci   { stroke: #7b3fe4; stroke-width: 2.2; fill: none; stroke-dasharray: 8 5; marker-end: url(#a-p); }
+      .mgmt { stroke: #555; stroke-width: 1.6; fill: none; stroke-dasharray: 3 4; marker-end: url(#a-k); }
+      .db   { stroke: #2459c9; stroke-width: 2.4; fill: none; marker-end: url(#a-b); }
+    </style>
+  </defs>
+
+  <rect width="1700" height="1150" fill="#ffffff"/>
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1d2a24">Expense Tracker — Three-Tier Architecture on AWS</text>
+  <text x="30" y="62" class="ts">Nginx web tier → Flask application tier → Amazon RDS MySQL, deployed by GitHub Actions through GHCR and AWS Systems Manager</text>
+
+  <!-- ===================== CI/CD band ===================== -->
+  <rect x="290" y="80" width="1390" height="140" rx="12" fill="#f5f0ff" stroke="#7b3fe4" stroke-width="1.4"/>
+  <text x="305" y="102" class="h" fill="#7b3fe4">CI/CD — GITHUB</text>
+
+  <rect x="310" y="120" width="150" height="80" class="box"/>
+  <text x="385" y="152" text-anchor="middle" class="tb">GitHub repo</text>
+  <text x="385" y="172" text-anchor="middle" class="tx">push to main</text>
+  <text x="385" y="186" text-anchor="middle" class="tx">app/ web/ .github/</text>
+
+  <rect x="500" y="112" width="560" height="96" rx="10" fill="#fff" stroke="#7b3fe4" stroke-width="1.2"/>
+  <text x="515" y="132" class="t" font-weight="700">GitHub Actions — deploy.yml</text>
+  <g font-size="12">
+    <rect x="515" y="145" width="110" height="48" rx="8" fill="#ece3ff"/><text x="570" y="166" text-anchor="middle">1. Test</text><text x="570" y="182" text-anchor="middle" class="tx">pytest</text>
+    <rect x="645" y="145" width="125" height="48" rx="8" fill="#ece3ff"/><text x="707" y="166" text-anchor="middle">2. Build + smoke</text><text x="707" y="182" text-anchor="middle" class="tx">compose + MySQL</text>
+    <rect x="790" y="145" width="110" height="48" rx="8" fill="#ece3ff"/><text x="845" y="166" text-anchor="middle">3. Push</text><text x="845" y="182" text-anchor="middle" class="tx">sha-tag + latest</text>
+    <rect x="920" y="145" width="125" height="48" rx="8" fill="#ece3ff"/><text x="982" y="166" text-anchor="middle">4. Deploy</text><text x="982" y="182" text-anchor="middle" class="tx">SSM + verify ALB</text>
+  </g>
+  <path d="M625,169 L643,169" class="ci"/><path d="M770,169 L788,169" class="ci"/><path d="M900,169 L918,169" class="ci"/>
+  <path d="M460,160 L498,160" class="ci"/>
+
+  <rect x="1100" y="120" width="210" height="80" class="box" stroke="#7b3fe4"/>
+  <text x="1205" y="148" text-anchor="middle" class="tb">GHCR</text>
+  <text x="1205" y="166" text-anchor="middle" class="tx">ghcr.io/&lt;owner&gt;/expense-web</text>
+  <text x="1205" y="180" text-anchor="middle" class="tx">ghcr.io/&lt;owner&gt;/expense-app</text>
+  <path d="M845,193 C845,215 1080,215 1100,180" class="ci"/>
+  <text x="975" y="228" class="tx" fill="#7b3fe4">docker push (GITHUB_TOKEN)</text>
+
+  <rect x="1350" y="120" width="310" height="80" class="box" stroke="#7b3fe4"/>
+  <text x="1505" y="146" text-anchor="middle" class="tb">IAM OIDC role</text>
+  <text x="1505" y="164" text-anchor="middle" class="tx">github-actions-expense-deploy</text>
+  <text x="1505" y="180" text-anchor="middle" class="tx">temporary creds · main branch only · no stored keys</text>
+  <path d="M1045,160 C1150,104 1300,104 1348,140" class="ci"/>
+
+  <!-- Developer + Users -->
+  <rect x="30" y="120" width="220" height="80" rx="10" fill="#f5f0ff" stroke="#7b3fe4"/>
+  <text x="140" y="155" text-anchor="middle" class="tb">Developer</text>
+  <text x="140" y="175" text-anchor="middle" class="tx">git push</text>
+  <path d="M250,160 L308,160" class="ci"/>
+
+  <rect x="30" y="440" width="220" height="90" rx="10" fill="#e8f5ee" stroke="#1f6f50"/>
+  <text x="140" y="475" text-anchor="middle" class="tb">Users</text>
+  <text x="140" y="495" text-anchor="middle" class="tx">web browser</text>
+  <text x="140" y="511" text-anchor="middle" class="tx">http://&lt;alb-dns-name&gt;</text>
+
+  <!-- ===================== AWS cloud ===================== -->
+  <rect x="290" y="250" width="1390" height="880" rx="14" fill="#fafafa" stroke="#232f3e" stroke-width="1.6"/>
+  <text x="305" y="274" class="h" fill="#232f3e">AWS CLOUD · REGION us-east-1</text>
+
+  <!-- VPC -->
+  <rect x="330" y="295" width="960" height="815" rx="12" fill="#fff" stroke="#8c4fff" stroke-width="1.8"/>
+  <text x="345" y="318" class="h" fill="#8c4fff">VPC expense-vpc · 10.0.0.0/16</text>
+
+  <!-- Internet gateway on left edge -->
+  <rect x="300" y="455" width="62" height="60" rx="8" fill="#fff" stroke="#8c4fff" stroke-width="1.6"/>
+  <text x="331" y="481" text-anchor="middle" class="ts" font-weight="700">IGW</text>
+  <text x="331" y="499" text-anchor="middle" class="tx">Internet</text>
+  <text x="331" y="510" text-anchor="middle" class="tx">Gateway</text>
+  <path d="M250,485 L298,485" class="flow"/>
+
+  <!-- AZ columns -->
+  <rect x="385" y="330" width="430" height="767" rx="10" fill="none" stroke="#147eba" stroke-dasharray="4 4"/>
+  <text x="400" y="350" class="ts" fill="#147eba" font-weight="700">Availability Zone us-east-1a</text>
+  <rect x="835" y="330" width="430" height="767" rx="10" fill="none" stroke="#147eba" stroke-dasharray="4 4"/>
+  <text x="850" y="350" class="ts" fill="#147eba" font-weight="700">Availability Zone us-east-1b</text>
+
+  <!-- Public subnets -->
+  <rect x="400" y="362" width="400" height="190" rx="8" fill="#eef7e4" stroke="#7aa116"/>
+  <rect x="850" y="362" width="400" height="190" rx="8" fill="#eef7e4" stroke="#7aa116"/>
+  <text x="410" y="379" class="tx" fill="#4c6a0c" font-weight="700">Public subnet 10.0.1.0/24 · → IGW</text>
+  <text x="860" y="379" class="tx" fill="#4c6a0c" font-weight="700">Public subnet 10.0.2.0/24 · → IGW</text>
+
+  <!-- ALB spanning both public subnets -->
+  <rect x="560" y="398" width="530" height="70" rx="10" fill="#fff" stroke="#8c4fff" stroke-width="1.8"/>
+  <text x="825" y="425" text-anchor="middle" class="tb">Application Load Balancer (internet-facing)</text>
+  <text x="825" y="445" text-anchor="middle" class="tx">Listener HTTP :80 → target group expense-tg · health check GET /health</text>
+  <text x="825" y="459" text-anchor="middle" class="tx">spreads requests across instances in both AZs</text>
+  <rect x="550" y="389" width="550" height="88" class="sg"/>
+  <rect x="556" y="382" width="150" height="14" fill="#eef7e4"/>
+  <text x="560" y="393" class="tx" fill="#dd344c" font-weight="700">sg-alb · in 80 from 0.0.0.0/0</text>
+  <path d="M362,470 C450,470 480,433 558,433" class="flow"/>
+
+  <!-- NAT gateway -->
+  <rect x="415" y="482" width="125" height="58" rx="8" fill="#fff" stroke="#8c4fff" stroke-width="1.4"/>
+  <text x="477" y="506" text-anchor="middle" class="ts" font-weight="700">NAT Gateway</text>
+  <text x="477" y="522" text-anchor="middle" class="tx">outbound only</text>
+  <path d="M415,505 L364,505" class="mgmt"/>
+  <text x="550" y="500" class="tx" fill="#555">← image pulls (GHCR),</text>
+  <text x="550" y="514" class="tx" fill="#555">SSM &amp; CloudWatch APIs</text>
+
+  <!-- Private app subnets -->
+  <rect x="400" y="572" width="400" height="306" rx="8" fill="#e8f2fa" stroke="#147eba"/>
+  <rect x="850" y="572" width="400" height="306" rx="8" fill="#e8f2fa" stroke="#147eba"/>
+  <text x="790" y="870" text-anchor="end" class="tx" fill="#0e5a86" font-weight="700">Private app 10.0.11.0/24 · → NAT</text>
+  <text x="1240" y="870" text-anchor="end" class="tx" fill="#0e5a86" font-weight="700">Private app 10.0.12.0/24 · → NAT</text>
+
+  <!-- ASG -->
+  <rect x="412" y="584" width="826" height="266" rx="10" fill="none" stroke="#ed7100" stroke-width="1.6" stroke-dasharray="10 5"/>
+  <text x="825" y="832" text-anchor="middle" class="ts" font-weight="700" fill="#b35400">Auto Scaling Group · expense-asg</text>
+  <text x="825" y="846" text-anchor="middle" class="tx" fill="#b35400">min 2 / max 4 · target: avg CPU 50%</text>
+
+  <rect x="440" y="618" width="330" height="190" rx="10" fill="#fff" stroke="#ed7100" stroke-width="1.6"/>
+  <text x="455" y="640" class="t" font-weight="700">EC2 t3.micro · AL2023</text>
+  <text x="455" y="656" class="tx">Docker · instance role · IMDSv2</text>
+  <rect x="455" y="680" width="140" height="80" rx="8" fill="#fff2e3" stroke="#ed7100"/>
+  <text x="525" y="704" text-anchor="middle" class="ts" font-weight="700">App tier</text>
+  <text x="525" y="721" text-anchor="middle" class="tx">Flask + Gunicorn</text>
+  <text x="525" y="735" text-anchor="middle" class="tx">:5000 (not published)</text>
+  <rect x="615" y="680" width="140" height="80" rx="8" fill="#e3f6f3" stroke="#0b8a7a"/>
+  <text x="685" y="704" text-anchor="middle" class="ts" font-weight="700">Web tier</text>
+  <text x="685" y="721" text-anchor="middle" class="tx">Nginx container</text>
+  <text x="685" y="735" text-anchor="middle" class="tx">:80 static + proxy</text>
+  <path d="M615,720 L597,720" class="flow"/>
+  <text x="685" y="782" text-anchor="middle" class="tx">internal Docker network</text>
+  <rect x="430" y="612" width="350" height="205" class="sg"/>
+  <rect x="436" y="605" width="140" height="14" fill="#e8f2fa"/>
+  <text x="440" y="616" class="tx" fill="#dd344c" font-weight="700">sg-app · in 80 from sg-alb</text>
+
+  <rect x="890" y="618" width="330" height="190" rx="10" fill="#fff" stroke="#ed7100" stroke-width="1.6"/>
+  <text x="905" y="640" class="t" font-weight="700">EC2 t3.micro · AL2023</text>
+  <text x="905" y="656" class="tx">Docker · instance role · IMDSv2</text>
+  <rect x="905" y="680" width="140" height="80" rx="8" fill="#fff2e3" stroke="#ed7100"/>
+  <text x="975" y="704" text-anchor="middle" class="ts" font-weight="700">App tier</text>
+  <text x="975" y="721" text-anchor="middle" class="tx">Flask + Gunicorn</text>
+  <text x="975" y="735" text-anchor="middle" class="tx">:5000 (not published)</text>
+  <rect x="1065" y="680" width="140" height="80" rx="8" fill="#e3f6f3" stroke="#0b8a7a"/>
+  <text x="1135" y="704" text-anchor="middle" class="ts" font-weight="700">Web tier</text>
+  <text x="1135" y="721" text-anchor="middle" class="tx">Nginx container</text>
+  <text x="1135" y="735" text-anchor="middle" class="tx">:80 static + proxy</text>
+  <path d="M1065,720 L1047,720" class="flow"/>
+  <text x="1135" y="782" text-anchor="middle" class="tx">internal Docker network</text>
+  <rect x="880" y="612" width="350" height="205" class="sg"/>
+  <rect x="886" y="605" width="140" height="14" fill="#e8f2fa"/>
+  <text x="890" y="616" class="tx" fill="#dd344c" font-weight="700">sg-app · in 80 from sg-alb</text>
+
+  <!-- ALB to web containers -->
+  <path d="M700,468 L700,678" class="flow"/>
+  <path d="M1150,468 L1150,678" class="flow"/>
+  <text x="708" y="562" class="tx" fill="#1f6f50" font-weight="700">HTTP :80</text>
+  <text x="1158" y="562" class="tx" fill="#1f6f50" font-weight="700">HTTP :80</text>
+
+  <!-- Private DB subnets -->
+  <rect x="400" y="895" width="400" height="172" rx="8" fill="#e8ecfb" stroke="#3b48cc"/>
+  <rect x="850" y="895" width="400" height="172" rx="8" fill="#e8ecfb" stroke="#3b48cc"/>
+  <text x="790" y="1059" text-anchor="end" class="tx" fill="#2a3596" font-weight="700">Private DB 10.0.21.0/24 · no internet route</text>
+  <text x="1240" y="1059" text-anchor="end" class="tx" fill="#2a3596" font-weight="700">Private DB 10.0.22.0/24 · no internet route</text>
+
+  <rect x="470" y="927" width="260" height="96" rx="10" fill="#fff" stroke="#3b48cc" stroke-width="1.8"/>
+  <text x="600" y="955" text-anchor="middle" class="tb">Amazon RDS for MySQL 8</text>
+  <text x="600" y="973" text-anchor="middle" class="tx">db.t3.micro · expensedb · encrypted at rest</text>
+  <text x="600" y="988" text-anchor="middle" class="tx">public access: No · TLS · daily backups</text>
+  <text x="600" y="1003" text-anchor="middle" class="tx">DB subnet group spans both AZs</text>
+  <rect x="460" y="919" width="280" height="112" class="sg"/>
+  <rect x="571" y="912" width="150" height="14" fill="#e8ecfb"/>
+  <text x="575" y="923" class="tx" fill="#dd344c" font-weight="700">sg-db · in 3306 from sg-app</text>
+
+  <rect x="920" y="927" width="260" height="96" rx="10" fill="#fff" stroke="#3b48cc" stroke-dasharray="6 4"/>
+  <text x="1050" y="963" text-anchor="middle" class="ts" font-weight="700" fill="#3b48cc">Standby replica</text>
+  <text x="1050" y="981" text-anchor="middle" class="tx">(Multi-AZ — not enabled to save cost;</text>
+  <text x="1050" y="995" text-anchor="middle" class="tx">one setting to turn on)</text>
+
+  <path d="M525,760 L525,925" class="db"/>
+  <path d="M975,760 C975,930 800,975 733,975" class="db"/>
+  <text x="535" y="892" class="tx" fill="#2459c9" font-weight="700">MySQL :3306 over TLS</text>
+
+  <!-- S3 Gateway endpoint on VPC right edge -->
+  <rect x="1262" y="650" width="56" height="56" rx="8" fill="#fff" stroke="#7aa116" stroke-width="1.6"/>
+  <text x="1290" y="674" text-anchor="middle" class="tx" font-weight="700">VPC</text>
+  <text x="1290" y="688" text-anchor="middle" class="tx">endpoint</text>
+  <text x="1290" y="700" text-anchor="middle" class="tx">(S3)</text>
+
+  <!-- ===================== Regional services (right) ===================== -->
+  <text x="1335" y="318" class="h" fill="#232f3e">REGIONAL SERVICES</text>
+
+  <rect x="1340" y="335" width="320" height="82" class="box" stroke="#e7157b"/>
+  <text x="1500" y="360" text-anchor="middle" class="tb">SSM Parameter Store</text>
+  <text x="1500" y="378" text-anchor="middle" class="tx">/expense-tracker/db_password (SecureString)</text>
+  <text x="1500" y="392" text-anchor="middle" class="tx">db_host · db_user · secret_key · s3_bucket</text>
+  <text x="1500" y="406" text-anchor="middle" class="tx">read by deploy.sh at runtime — never in Git or images</text>
+
+  <rect x="1340" y="437" width="320" height="82" class="box" stroke="#dd344c"/>
+  <text x="1500" y="462" text-anchor="middle" class="tb">IAM</text>
+  <text x="1500" y="480" text-anchor="middle" class="tx">expense-ec2-role: read /expense-tracker/*,</text>
+  <text x="1500" y="494" text-anchor="middle" class="tx">S3 receipts/* only, CloudWatch logs, SSM agent</text>
+  <text x="1500" y="508" text-anchor="middle" class="tx">least-privilege policies in infra/iam/</text>
+
+  <rect x="1340" y="595" width="320" height="82" class="box" stroke="#7aa116"/>
+  <text x="1500" y="620" text-anchor="middle" class="tb">Amazon S3</text>
+  <text x="1500" y="638" text-anchor="middle" class="tx">expense-receipts-&lt;unique&gt; · receipt uploads</text>
+  <text x="1500" y="652" text-anchor="middle" class="tx">Block Public Access · SSE-S3 · pre-signed URLs</text>
+  <path d="M1318,670 L1338,650" class="mgmt"/>
+  <path d="M1220,690 L1260,680" class="mgmt"/>
+
+  <rect x="1340" y="697" width="320" height="72" class="box" stroke="#e7157b"/>
+  <text x="1500" y="722" text-anchor="middle" class="tb">Amazon CloudWatch</text>
+  <text x="1500" y="740" text-anchor="middle" class="tx">Logs: /expense-tracker (awslogs driver)</text>
+  <text x="1500" y="754" text-anchor="middle" class="tx">Metrics: CPU → drives ASG scaling</text>
+
+  <rect x="1340" y="830" width="320" height="82" class="box" stroke="#7b3fe4"/>
+  <text x="1500" y="855" text-anchor="middle" class="tb">SSM Run Command</text>
+  <text x="1500" y="873" text-anchor="middle" class="tx">runs /opt/expense/deploy.sh sha-&lt;commit&gt;</text>
+  <text x="1500" y="887" text-anchor="middle" class="tx">on every InService instance → docker compose pull/up</text>
+
+  <!-- deploy path: OIDC role -> SSM Run Command -> ASG -->
+  <path d="M1650,200 L1650,828" class="ci"/>
+  <text x="1642" y="560" text-anchor="end" class="tx" fill="#7b3fe4" transform="rotate(-90 1642 560)">assume role (OIDC) → send-command</text>
+  <path d="M1340,870 C1290,870 1270,800 1240,790" class="ci"/>
+
+  <!-- instances read params / write logs (management) -->
+  <path d="M1230,640 C1290,600 1300,420 1338,385" class="mgmt"/>
+  <path d="M1230,760 C1290,760 1300,740 1338,733" class="mgmt"/>
+
+  <!-- ===================== Legend ===================== -->
+  <g transform="translate(30,600)">
+    <rect width="230" height="250" rx="10" fill="#fff" stroke="#cfd5d2"/>
+    <text x="15" y="25" class="h" fill="#1d2a24">LEGEND</text>
+    <path d="M15,50 L65,50" class="flow"/><text x="75" y="54" class="tx">user request path</text>
+    <path d="M15,80 L65,80" class="db"/><text x="75" y="84" class="tx">database traffic (TLS)</text>
+    <path d="M15,110 L65,110" class="ci"/><text x="75" y="114" class="tx">CI/CD build &amp; deploy</text>
+    <path d="M15,140 L65,140" class="mgmt"/><text x="75" y="144" class="tx">AWS API / outbound</text>
+    <rect x="15" y="160" width="50" height="22" class="sg"/><text x="75" y="175" class="tx">security group boundary</text>
+    <rect x="15" y="192" width="22" height="16" rx="3" fill="#eef7e4" stroke="#7aa116"/><text x="45" y="205" class="tx">public subnet</text>
+    <rect x="125" y="192" width="22" height="16" rx="3" fill="#e8f2fa" stroke="#147eba"/><text x="155" y="205" class="tx">private subnet</text>
+    <rect x="15" y="218" width="22" height="16" rx="3" fill="#e8ecfb" stroke="#3b48cc"/><text x="45" y="231" class="tx">private DB subnet (isolated)</text>
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block header %}
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="{{ url_for('main.landing') }}">{% include "_brand.html" %}</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="plain hide-sm" href="{{ url_for('main.landing') }}#how">How it works</a>
+      <a class="plain" href="{{ url_for('auth.login') }}">Log in</a>
+      <a class="btn btn-khata btn-sm" href="{{ url_for('auth.signup') }}">Create account</a>
+    </nav>
+  </div>
+</header>
+{% endblock %}
+{% block footer %}
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Khata Expense Tracker. A three-tier cloud app: Nginx, Flask and MySQL on AWS.</span>
+    <span>Served by <code>{{ instance_id }}</code>, release <code>{{ app_version }}</code></span>
+  </div>
+</footer>
+{% endblock %}

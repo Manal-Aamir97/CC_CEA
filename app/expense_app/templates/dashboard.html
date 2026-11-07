@@ -1,0 +1,119 @@
+{% extends "layout_app.html" %}
+{% block title %}Dashboard | Khata Expense Tracker{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ month.strftime('%B %Y') }}</h1>
+    <p class="sub">{% if is_current %}Hello {{ g.user.name.split()[0] }}. {% if d.days_left %}{{ d.days_left }} day{{ 's' if d.days_left != 1 }} left this month.{% endif %}{% else %}Looking back at a past month.{% endif %}</p>
+  </div>
+  <div class="month-switch" aria-label="Change month">
+    <a class="btn" href="{{ url_for('main.dashboard', month=prev_month.strftime('%Y-%m')) }}" aria-label="Previous month" title="{{ prev_month.strftime('%B %Y') }}">&#8249;</a>
+    {% if not is_current %}<a class="btn btn-sm" href="{{ url_for('main.dashboard') }}">This month</a>{% endif %}
+    <a class="btn" href="{{ url_for('main.dashboard', month=next_month.strftime('%Y-%m')) }}" aria-label="Next month" title="{{ next_month.strftime('%B %Y') }}">&#8250;</a>
+  </div>
+</div>
+
+{% if not has_any %}
+<section class="panel empty">
+  <h2>Your khata is empty</h2>
+  <p>Add the first thing you spent money on today. Or fill the last three months with sample expenses to see how the dashboard works.</p>
+  <div class="actions">
+    <a class="btn btn-khata" href="{{ url_for('main.new_expense') }}">Add your first expense</a>
+    <form method="post" action="{{ url_for('main.sample_data') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn" type="submit">Add sample data</button>
+    </form>
+  </div>
+</section>
+{% else %}
+
+<section class="figures" aria-label="This month in numbers">
+  <div class="figure">
+    <p class="label">Spent</p>
+    <p class="value"><span class="cur">{{ currency }}</span>{{ d.spent|money0 }}</p>
+    <p class="note">{{ d.count }} expense{{ 's' if d.count != 1 }}</p>
+  </div>
+  <div class="figure">
+    <p class="label">Budget left</p>
+    {% if d.total_budget %}
+      <p class="value"><span class="cur">{{ currency }}</span>{{ (d.budget_left if d.budget_left > 0 else 0)|money0 }}</p>
+      {% set bp = d.budget_pct %}
+      <div class="meter {{ 'over' if d.budget_left < 0 else ('warn' if bp >= 80 else '') }}" role="img" aria-label="{{ bp }}% of budget used"><span style="width: {{ bp }}%"></span></div>
+      {% if d.budget_left < 0 %}
+        <p class="note over">{{ currency }} {{ (-d.budget_left)|money0 }} over your {{ d.total_budget|money0 }} budget</p>
+      {% else %}
+        <p class="note">of {{ currency }} {{ d.total_budget|money0 }}</p>
+      {% endif %}
+    {% else %}
+      <p class="value">&mdash;</p>
+      <p class="note"><a href="{{ url_for('main.budgets') }}">Set a monthly budget</a></p>
+    {% endif %}
+  </div>
+  <div class="figure">
+    <p class="label">Daily average</p>
+    <p class="value"><span class="cur">{{ currency }}</span>{{ d.daily_avg|money0 }}</p>
+  </div>
+  <div class="figure">
+    <p class="label">Biggest category</p>
+    <p class="value" style="font-size: 1.25rem; margin-top: 10px;">{{ d.categories[0].category if d.categories and d.categories[0].spent else '—' }}</p>
+  </div>
+</section>
+
+<div class="dash-grid">
+  <section class="panel trend">
+    <div class="panel-head"><h2>Last six months</h2><span class="muted small">{{ currency }}</span></div>
+    <div class="trend-chart" role="img" aria-label="Monthly spending for the last six months">
+      {% for m in d.trend %}
+      <div class="trend-col {{ 'current' if m.current }}" title="{{ m.month.strftime('%B %Y') }}: {{ currency }} {{ m.total|money0 }}">
+        <div class="trend-track">
+          <span class="trend-val">{{ m.total|money0 if m.total else '' }}</span>
+          <span class="trend-bar" style="height: {{ (m.pct * 0.8)|round(1) }}%"></span>
+        </div>
+        <span class="trend-lab">{{ m.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% if d.change is not none %}
+    <p class="trend-note">{% if d.change == 0 %}Same as {{ d.prev_label }}.{% else %}<strong>{{ currency }} {{ (d.change if d.change > 0 else -d.change)|money0 }} {{ 'more' if d.change > 0 else 'less' }}</strong> than {{ d.prev_label }}{% if d.change_pct is not none %} ({{ '+' if d.change > 0 else '−' }}{{ d.change_pct|abs }}%){% endif %}{% if is_current %}, with {{ d.days_left }} day{{ 's' if d.days_left != 1 }} to go{% endif %}.{% endif %}</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>By category</h2><a href="{{ url_for('main.budgets') }}">Edit budgets</a></div>
+    {% if d.categories %}
+    <ul class="cats">
+      {% for c in d.categories %}
+      <li>
+        <div class="cat-top">
+          <span class="cat-name"><span class="dot" style="background: {{ c.color }}"></span>{{ c.category }}</span>
+          <span class="cat-amt">{{ c.spent|money0 }}{% if c.budget %} <span class="of">of {{ c.budget|money0 }}</span>{% endif %}</span>
+        </div>
+        <div class="cat-bar"><span style="width: {{ c.budget_pct if c.budget else c.bar_pct }}%; background: {{ 'var(--khata)' if c.over else c.color }}"></span></div>
+        {% if c.over %}<p class="cat-flag">{{ currency }} {{ (c.spent - c.budget)|money0 }} over budget</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted">Nothing recorded in {{ month.strftime('%B') }}.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel wide">
+    <div class="panel-head"><h2>Recent expenses</h2><a href="{{ url_for('main.expenses', month='all') }}">See all</a></div>
+    <table class="ledger">
+      <thead><tr><th>Date</th><th>Expense</th><th>Category</th><th class="amt">Amount ({{ currency }})</th></tr></thead>
+      <tbody>
+      {% for e in recent %}
+        <tr>
+          <td class="date">{{ e.spent_on.strftime('%d %b') }}</td>
+          <td class="title"><a href="{{ url_for('main.edit_expense', expense_id=e.id) }}" style="color: inherit; text-decoration: none;">{{ e.title }}</a></td>
+          <td class="cat"><span class="dot" style="background: {{ category_color(e.category) }}"></span>{{ e.category }}</td>
+          <td class="amt">{{ e.amount_cents|money }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

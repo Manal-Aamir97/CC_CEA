@@ -1,0 +1,64 @@
+{% extends "layout_app.html" %}
+{% block title %}{{ "Edit expense" if expense else "Add expense" }} | Khata Expense Tracker{% endblock %}
+{% block content %}
+<div class="form-page">
+  <div class="page-head">
+    <div>
+      <h1>{{ "Edit expense" if expense else "Add an expense" }}</h1>
+      {% if expense %}<p class="sub">Recorded on {{ expense.created_at|string|truncate(10, true, '') }}</p>{% endif %}
+    </div>
+  </div>
+
+  <form class="panel stack" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label>Amount
+      <span class="amount-input"><span>{{ currency }}</span>
+        <input type="text" name="amount" inputmode="decimal" value="{{ form.get('amount', '') }}" placeholder="0.00" required autofocus>
+      </span>
+    </label>
+
+    <label>What was it for?
+      <input type="text" name="title" maxlength="120" value="{{ form.get('title', '') }}" placeholder="e.g. Weekly groceries" required>
+    </label>
+
+    <div class="row-2">
+      <label>Category
+        <select name="category" required>
+          <option value="" disabled {% if not form.get('category') %}selected{% endif %}>Choose a category</option>
+          {% for c in categories %}<option value="{{ c }}" {% if c == form.get('category') %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Date
+        <input type="date" name="spent_on" value="{{ form.get('spent_on', '') }}" required>
+      </label>
+    </div>
+
+    <label><span class="lbl">Note<span class="hint">Optional</span></span>
+      <textarea name="note" maxlength="500" rows="3">{{ form.get('note', '') }}</textarea>
+    </label>
+
+    {% if receipts_enabled %}
+    <label><span class="lbl">Receipt<span class="hint">Optional. PNG, JPG, WEBP or PDF up to 5 MB, stored privately in Amazon S3.</span></span>
+      <input type="file" name="receipt" accept=".png,.jpg,.jpeg,.webp,.pdf">
+    </label>
+    {% if expense and expense.receipt_key %}<p class="muted small">A receipt is attached. <a href="{{ url_for('main.view_receipt', expense_id=expense.id) }}" target="_blank" rel="noopener">View it</a>. Uploading a new file replaces it.</p>{% endif %}
+    {% endif %}
+
+    <div class="form-actions">
+      {% if expense %}
+        <button class="btn btn-danger" type="submit" form="delete-form">Delete</button>
+        <span class="spacer"></span>
+      {% endif %}
+      <a class="btn btn-quiet" href="{{ url_for('main.expenses') }}">Cancel</a>
+      {% if not expense %}<button class="btn" type="submit" name="again" value="1">Save and add another</button>{% endif %}
+      <button class="btn btn-khata" type="submit">{{ "Save changes" if expense else "Save expense" }}</button>
+    </div>
+  </form>
+  {% if expense %}
+  <form id="delete-form" method="post" action="{{ url_for('main.delete_expense', expense_id=expense.id) }}" data-confirm="Delete {{ expense.title }}? This can't be undone.">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

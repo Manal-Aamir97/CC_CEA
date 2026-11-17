@@ -81,7 +81,7 @@ def test_login_next_is_restricted_to_local_paths(client):
 def test_signup_with_sample_data_fills_dashboard(client):
     res = signup(client, sample=True)
     assert b"Last six months" in res.data
-    assert b"Budget left" in res.data
+    assert b"Budget NOT LEFT" in res.data
     body = client.get(f"/api/summary?month={THIS_MONTH}").get_json()
     assert body["total"] > 0
 

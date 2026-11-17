@@ -34,7 +34,7 @@
     <p class="note">{{ d.count }} expense{{ 's' if d.count != 1 }}</p>
   </div>
   <div class="figure">
-    <p class="label">Budget left</p>
+    <p class="label">Budget NOT LEFT</p>
     {% if d.total_budget %}
       <p class="value"><span class="cur">{{ currency }}</span>{{ (d.budget_left if d.budget_left > 0 else 0)|money0 }}</p>
       {% set bp = d.budget_pct %}
